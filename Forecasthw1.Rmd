@@ -1,0 +1,74 @@
+---
+title: "Hwforecast1"
+output: html_document
+date: "2025-10-07"
+---
+
+```{r}
+library(fpp2)
+library(TTR)
+library(readr)
+BLSJOBSJ <- read_csv("Desktop/BLSJOBSJ.csv")
+MA5_forecast <- ma(BLSJOBSJ$`Total Jobs (private and government)`,order=5)
+plot(MA5_forecast)
+Jobs<-BLSJOBSJ$`Total Jobs (private and government)`
+plot(Jobs)
+attributes(BLSJOBSJ)
+acf(Jobs)
+#I am curious why there is a large distribution towards zero. Aside from that I feel that all of the data timeline is valid. I will use ME as an accuracy measure for this assignment.
+mean_fc<- meanf(Jobs,5)
+plot(mean_fc,xlab = "Months Summed", ylab="New Job Count")
+accuracy(mean_fc)
+#I am seeing a mape of -infinity. This either means my forecast is absolute garbage or that my data may include some zeros which cannot be divided. I will investigate. The ME for this model is -4.08.
+naive_fc<-naive(Jobs,5)
+plot(naive_fc,xlab = "Months Summed", ylab="New Job Count")
+accuracy((naive_fc))
+#Looking at the ME, this model has a higher ME of 11.69. This forecast has positive error unlike the last and also has almost three times as much error. 
+rwf_fc<-rwf(Jobs,5,drift=TRUE)
+plot(rwf_fc,xlab = "Months Summed", ylab="New Job Count")
+accuracy(rwf_fc)
+#This model has an ME of -3.49. This model does under-forecast ,  however it has the smallest error of the model completed so far. 
+snaive_fc<-snaive(Jobs,5)
+plot(snaive_fc, xlab = "months summed", ylab="New Job Count")
+accuracy(snaive_fc)
+#This model has an ME of 11.61, this is the second highest error so far and suggest this forecast may not produce the best results available. 
+ma5_fc<-ma(Jobs,5)
+plot(ma5_fc,xlab = "months summed", ylab="New Job Count")
+ma9_fc<-ma(Jobs,9)
+plot(ma9_fc,xlab = "Months Summed", ylab="New Job Count")
+ets_fc<-ets(Jobs)
+plot(ets_fc,xlab = "Months Summed", ylab="New Job Count")
+accuracy(ets_fc)
+#This model has an ME of 101.80. Using the ME metric, this model is by far the lest accurate and seems to produce the most error. Given that this is my last forecast, the best model here is RWF. This model did under forecast overall, but given that the forecast is fore jobs added per month, there are not additional costs for under-forecasting like in demand planning.
+hw_fc<-(holt(Jobs))
+plot(hw_fc)
+accuracy(hw_fc)
+#This forecast has a mean error of -80.64. Compared to the over models run, this forecast seems to have the second most error and is unreliable using this metric. 
+plot(Jobs)
+lines(naive_fc$mean,col="red")
+lines(mean_fc$mean,col="blue")
+lines(rwf_fc$mean,col="green")
+lines(snaive_fc$mean,col="purple")
+lines(hw_fc$mean,col="pink")
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
