@@ -1,0 +1,112 @@
+---
+title: "Untitled"
+output: html_document
+date: "2025-10-10"
+---
+
+```{r}
+library(fpp2)
+library(TTR)
+library(readr)
+BLSJOBSJ <- read_csv("Desktop/BLSJOBSJ.csv")
+newjobs<-BLSJOBSJ$`Total Jobs (private and government)`
+plot(newjobs)
+#The months are summed at the bottom, with 150 months (12.5) of data present. Overall, the new jobs added per month appears to be relatively constant, with a few outliers , especially around month 50. 
+Acf(newjobs)
+#Looking at this chart, I feel that all the data is significant and should be included. I am interested to learn more about the months that show a negative ACF value. There are a few large spikes in lag 5 and 13 that shows significant values. 
+fivenum(newjobs)
+mean(newjobs)
+boxplot(newjobs)
+#Looking at my box-plot , it is clear that there is a large range of values present in my data. This may suggest that some smoothing may be needed in my forecast to compensate for these outlier values. My mean and median are pretty far apart, which is feasible given the large outliers present. 
+naive(newjobs)
+plot(naive(newjobs))
+residuals((naive(newjobs)))
+plot(residuals((naive(newjobs))))
+#Looking at the residuals for the naive model, shows a cyclic pattern. This forecast was dramatically inaccurate around month 35. Aside form that, Residuals look consistent. 
+hist(residuals((naive(newjobs))))
+#The plot indicates that residuals are relatively evenly distributed between being 10,000 over and under the actual values. There are a few large outliers but almost no values in between these two. This tends to suggest the model on average had a stable amount of error between -10,000-10,000 jobs, yet did not forecast well for the outliers discussed earlier. 
+fitted.values(naive(newjobs))
+plot(fitted.values(naive(newjobs)))
+#The fitted values chart looks extremely similar to my residual plot. Here, the same spike is seen around week 35. Aside from that, a cyclic pattern is present, suggesting this model may be missing a seasonality factor. 
+plot(fitted.values(naive(newjobs)),residuals(naive(newjobs)))
+#This plot looks really good. The points look random and are msotly cnetered around zero. There is one large outlier seen. 
+plot((newjobs),residuals(naive(newjobs)))
+#This chart suggests as the number of new job increase, so do the residuals.
+Acf(residuals(naive(newjobs)))
+#Looking at this plot, the lag 1 shows significant outliers in residuals compared to the rest of my data. This suggests that lag 1 values are significantly different to the rest of may data values. 
+accuracy(naive(newjobs))
+naive(newjobs,12)
+plot(naive(newjobs,12))
+#Looking at the accuracy metrics available, the mean error is 11.61. It is hard to compare since I do not have the ME for other models yet, but this seems to be relatively good. This error tends to suggest new jobs for next month is going to be rather close to the new jobs added this month. It suggests in a year from now, 8100 jobs will be added that month.The large range of values makes the chart misleading since the chart puts 8100 pretty close to zero. 
+plot(newjobs)
+lines(col="red",ma(newjobs,3))
+lines(col="blue",ma(newjobs,6))
+lines(col="green",ma(newjobs,9))
+#As the moving average time increases, the forecast smooths out and is less responsive to new trends or outliers. MA3 was the most responsive to the outlier in week 35, but MA9 did a better job at recovering from these outliers. I think MA9 overall was a better forecast. 
+ses(newjobs,12)
+plot(ses(newjobs,12))
+summary(ses(newjobs,12))
+#The alpha here is .0721. This is means that more weight is given to the recent observation and more weight is given to the historical data. Sigma was 6054.92, which signifies that the standard deviation for my residuals was off by 6054 jobs. This is realiztic since a majority of my data falls between -10,000 and 10,000. 
+residuals(ses(newjobs,12))
+plot(residuals(ses(newjobs,12)))
+#The plot indicates that the SES model has average residuals between -5000-5000. This is a large improvement from my previous model. This model was unable to account for the outliers in week 35. 
+hist(residuals(ses(newjobs,12)))
+#This plot shows the largest residual values are present around zero, with a few outlier values around 40,000. Overall, the residuals are concentrated between -5000-5000 which is pretty encouraging. 
+plot(fitted.values(ses(newjobs)),residuals(ses(newjobs)))
+#This plot tends to suggest the model is pretty good considering there is no wave and most of the values are centered around zero. The plot shows a larger presence of values to the right of the chart, which is reasonable given the knowledge of outliers in my model. A modle that could account for these would be better, yet that may not be possible. 
+plot((newjobs),residuals(ses(newjobs)))
+#This chart suggests as new job increase, the residuals increase as well under this model. This chart almost looks linear, which suggest it cannot account for outlier/high job months well. 
+Acf(residuals(ses(newjobs)))
+#All the values are within the confidence interval, suggesting all the data here should be included and the model may not improve by removing an certain time. 
+accuracy(ses(newjobs))
+#The mean error here is 236. This is much higher than my last model, suggesting there is more error in this model. 
+ses(newjobs,12)
+plot(ses(newjobs,12))
+#Overall, this model has significantly more error than my last model, creating some doubt. It predicts there will be 2179 jobs added in the month one year from now. The residuals for this chart were more concentrated, yet the average error is still higher. 
+holt(newjobs,12)
+plot(holt(newjobs,12))
+summary(holt(newjobs,12))
+#My alpha here is .1005. This means more weight is given to my historical data.My beta is 1e-04. This represents the weight given to trend. There is not much present. My initial states are l=2616 and b=8.41. My sigma is 6123. This represents my standard deviation of my residuals. 
+residuals(holt(newjobs,12))
+plot(residuals(holt(newjobs,12)))
+#My plot shows most of my residuals consistently fall between 10,000-10,000 except month 35. They look consistent  and stable. 
+hist(residuals(holt(newjobs,12)))
+#This plot shows my residuals fall largely between 0-60 for my 12 month forecast.
+plot(fitted.values(holt(newjobs)),residuals(holt(newjobs)))
+#This plot does not look particularly good given that most of my values are concentrated to the right. This mean my model may be underpredicting. 
+plot((newjobs),residuals(holt(newjobs)))
+#This plot looks linear, suggesting as my new jobs added per month increases, my residuals increase as well. 
+Acf(residuals(holt(newjobs)))
+#All the values are within the confidence interval. 
+accuracy(holt(newjobs))
+#The mean error here is -80.64. Overall, this model is under forecasting on average, but has less error than my other models. 
+holt(newjobs,12)
+plot(holt(newjobs,12))
+#This model predicts 2384 jobs will be added in the month one year from now.This model under-forecasted on average yet still has the smallest overall error to date.
+Accuracy_Value<-c(11.61,236,-80.4)
+forecast_type<-c("Naive","SES","Holt")
+table(Accuracy_Value,forecast_type)
+#I was unable to print accuracy metrics for my MA forecast, which limits my table. Looking at the table, the Naive forecast has the lowest mean error, with a value of 11.61. This forecast was the most accurate using this metric. The Naive forecast is a forecast that repeats the previous actual value and places this as the forecast. This forecast is the most helpful when you may not have many predicting factors, like during COVID. MA of X works by creating an average of the previous X actual values and using this as a forecast. The higher x is, the more is smooths out, the lower x is, the more responsive it is to new trends. SES works by using an Alpha value and multiplying it by the most recent demand, and adding this with (1-aplha)* most recent forecast. The large alpha is, the more weight is given to recent trends/data compared to historical data. HoltWinters Incorporates seasonality and trend using alpha and beta. This forecast is beneficial if your products are impacted by these factors. 
+#Conclusion: New jobs added monthly can be difficult to predict. The best indicator so far has been the Naive model, which suggests that the best indicator of next month is the value of this current month. Using real world knowledge, I think the values will decrease a year from now. Using my model, it predicts 8100 jobs will be added. I think this type of metric responds well to expert input rather than total reliance on time series data. The naive model is flat, so it cannot predict two years out from now. My SES predicts 2179 two years out from now. I think its hard to predict how many jobs will be added that far in advance. Overall, I think jobs will increase and decrease in concurrence with the business cycle. Ranking my model, naive was the best, followed by holts, and ses. This was concluded from the mean error of these forecasts. 
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
