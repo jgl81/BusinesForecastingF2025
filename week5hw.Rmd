@@ -1,0 +1,51 @@
+---
+title: "week5hw"
+output: html_document
+date: "2025-10-17"
+---
+
+```{r}
+library(fpp2)
+library(TTR)
+library(readr)
+BLSJOBSJ <- read_csv("Desktop/BLSJOBSJ.csv")
+newjobs_ts<-ts(BLSJOBSJ$`Total Jobs (private and government)`,start=c(2007,01),frequency = 12)
+head(newjobs_ts)
+plot(newjobs_ts)
+stl_plot<-stl(newjobs_ts,s.window = "periodic")
+plot(stl_plot)
+attributes(stl_plot)
+seasadj(stl_plot)
+plot(newjobs_ts)
+lines(col="red",seasadj(stl_plot))
+stl_forecast<-forecast(stl_plot)
+plot(stl_forecast)
+stl_forecast<-forecast(stl_plot, h=5)
+plot(stl_forecast)
+decompose(newjobs_ts)
+plot(decompose(newjobs_ts))
+attributes(decompose(newjobs_ts))
+seasadj(decompose(newjobs_ts))
+plot(seasadj(decompose(newjobs_ts)))
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
