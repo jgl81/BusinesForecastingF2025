@@ -1,0 +1,131 @@
+---
+title: "midterm2practice"
+output: html_document
+date: "2025-10-24"
+---
+
+```{r}
+library(readr)
+library(fpp2)
+TRANSIT <- read_csv("Downloads/TRANSIT.csv")
+Transit_Raw <- TRANSIT$TRANSIT
+Transit_ts <- ts(Transit_Raw, frequency = 12, start = c(2000,1))
+plot(Transit_ts)
+plot(TRANSIT$TRANSIT)
+plot(Transit_ts)
+#Looking at this time series chart, it is clear that there is seasonality in this transit data. Up until 2020, there seemed to be limited trend. 2020 drastically changed the transits and since then, there has been both seasonality as well as an upward recovery trend.
+fivenum(Transit_Raw)
+mean(Transit_Raw)
+boxplot(Transit_ts)
+#Looking at these numbers, it is clear that my data is skewed towards the left tail. Looking at the box plot, it is clear that there are many outliers below the bottom whisker. This is supported by the fact that the median is 824766 but the mean is 779435. These lower outliers are pulling the mean down 
+decompose(Transit_ts)
+plot(decompose(Transit_ts))
+attributes((decompose(Transit_ts)))
+stl_transit<-stl(Transit_ts,s.window = "periodic")
+plot(stl_transit)
+attributes(stl_transit)
+attributes((decompose(Transit_ts)))
+decomp_transit<-decompose(Transit_ts)
+decomp_transit$seasonal
+seasadj(stl_transit)
+plot(seasadj(stl_transit))
+#Looking at the seasonally adjusted data, seasonality plays a rather large role in influencing transit. This data is not only affected by seasonality, but the graph changes drastically after removing seasonality
+#Looking at these charts and numbers, it is clear that my data does have seasonality. The decomposition charts show in the seasonality sector that this is present. Looking at the stability of my seasonality chart and the use of stl, I would say that my decomposition is additive. This is also confirmed in the decomp model. The time series is highest in October at around 70000 and lowest in February. Maybe people rely the most on public transportation in October there are not a lot of car sales and in February people got new cars. 
+naive(Transit_ts)
+plot(naive(Transit_ts))
+accuracy(naive(Transit_ts))
+residuals(naive(Transit_ts))
+plot(residuals(naive(Transit_ts)))
+#This plot of residuals shows that the residuals are relatively stable, with the exception of covid. This model does not look good since the residuals look cyclic and large. 
+hist(residuals(naive(Transit_ts)))
+#This plot shows that my residuals are largely negative and concentrated between 1e05 and -1e05. The frequency overall is rather high, meaning this may not be the best model. 
+naive_fit<-fitted.values(naive(Transit_ts))
+naive_resid<-residuals(naive(Transit_ts))
+plot(naive_fit,naive_resid)
+#This chart shows large clusters in the right of the chart, indicating the model is missing some signals as my residuals increase as my models becomes more fitted. 
+plot(Transit_ts,naive_resid)
+#This plot shows a majority of the plots are located towards the right, meaning that as the actual values increase, there tends to be more residuals. This model does worse as the acutal values increase. 
+Acf(naive_resid)
+#This plot shows that many of the residuals are outside of the blue lines, indicating that this model is auto correlated and missed some important signals. This model did not predict the some of the outlier times well, meaning the model would show more accurate if we eliminated some time periods. 
+accuracy(naive(Transit_ts))
+plot(accuracy(naive(Transit_ts)))
+naive(Transit_ts,12)
+plot(naive(Transit_ts,12))
+#It hard to draw an real conclusion yet since I do not have a point of comparison, but the mape here is 6.06 for this model. This model predicts the value one year from now will be 532206. The nature of this model produces a flat forecast. This model overal did not do the best job since it does not capture the seasonality present. 
+plot(Transit_ts)
+lines(ma(Transit_ts,3),col="red")
+lines(ma(Transit_ts,6),col="blue")
+lines(ma(Transit_ts,9),col="green")
+#Looking at these charts, the MA3 was the best. This is because it was the most responsive to the volatile changes in transportation. As the ma increased, the model became smoothed out and less responsive. 
+ses(Transit_ts,12)
+summary(ses(Transit_ts,12))
+#Alpha here is .8374. This represent the weight given to my recent data. The remainder, (1-.8374) is the weight given the historical data. The value of intial state is 732001. The value of sigma is 55323. This value represents the standard deviation, which is relatviely large here since our mean was around 79000. 
+ses_resid<-residuals(ses(Transit_ts))
+ses_resid
+plot(ses_resid)
+#The plot of residuals shows that there may be some seasonality that may not be accounted for due to the cyclic residuals. The model also was not able to account for covid well but was pretty responsive afterwards. 
+hist(ses_resid)
+#This plot indicates that a majority of residuals occur between 1e-05 and 1e05 with the residuals being skewed towards the left tail, meaning there are more negative residuals ie: the model tends to over predict. 
+fit_ses<-fitted.values(ses(Transit_ts))
+ses_resid<-residuals(ses(Transit_ts))
+plot(ses_resid)
+ses_resid
+plot(fit_ses,ses_resid)
+#In this plot, residuals remain rather constant across all fitted values. There are more residuals located as fitted values increase, but the residuals appear equally large in the lower fitted values. This could mean a few things, like that I have more data points at higher fitted values. 
+plot(Transit_ts,ses_resid)
+#This plot shows my residuals seem equally large regardless of the actual value. This chart alos suggests I have more larger actual values, leading to a cluster, IE: this data has a lot of lower outliers that skews the chert. 
+acf(ses_resid)
+#This plot shows many values outside of the blue lines. This means this model may have missed a pattern or signal or has some serious outliers. 
+accuracy(ses(Transit_ts))
+#This model has a mape of 6.02. This is remarkably similar to my first mape with the naive model. This model did not drastically improve from the naive model. 
+ses(Transit_ts,12)
+plot(ses(Transit_ts,12))
+#Overall, this model is still missing some signals as seen in the residual plot. This model also has a very similar mape to the naive model, not showing any improvements.
+sse_holt<-HoltWinters(Transit_ts,beta = NULL,gamma = NULL)
+plot(sse_holt)
+
+
+#My alpha here is .928. This represent the weight given to recent data. My beta is 0. This represents how responsive the model is to trend.Gamma is 1, which represents how responsive the model is to seasonality. My initial level is 551045.439. My initial trend is 1531.450, and my initial seasonality is -9283.195. The initial values represent that values at the start. For example, initial trend shows average differences between actual values in the first season. Initial seasonality shows the deviation from the average in the first season.
+resd_sse<-residuals(HoltWinters(Transit_ts,beta = NULL,gamma = NULL))
+sd(resd_sse)
+#sigma is 43052.5
+plot(resd_sse)
+#This plot shows the best residuals so far. This model did not account for covid well, however the residuals are not as cyclic as the past two models and smaller in values as well. 
+fitt_sse<-fitted.values(sse_holt)
+plot(fitted.values(sse_holt),resd_sse)
+acf(resd_sse)
+#This graph shows that the model has no trend and has little level until the impact from covid. The seasonality is consistent.I got an error when trying to plot my actual for vs residual values. It says incorrect number of dimensions. My acf plot of residuals shows most of the values are close to the blue lines, with a clear outlier at lag 0. This means that with the exception of lag one, the model is close to including all the signals needed to accurately predict. This iacf residual plot is the best for Holtwinters out of the plots done so far.   
+forecast_holt<-forecast(sse_holt,h=12)
+plot(forecast_holt)
+accuracy(forecast_holt)
+#The mape here is 4.26. This is the most accurate model so far.
+forecast_holt<-forecast(sse_holt,h=12)
+plot(forecast_holt)
+forecast_holt
+#Overall, this model was the most accurate using the mape as a measure of accuracy. This model has a mape of 4.2. The predicted value in one year is 550583 in July. This is one of the only models that does not produce a flat forecast due to the use of trend and seasonality. 
+Accuaracy_Comparison<-list("Naive Mape=6.06","SES Mape=6.02","Holtwinters Mape=4.02")
+table(Accuaracy_Comparison)
+#Looking at my accuracy comparison table, the Holtwinters model has the best Mape. I choose the mape at the accuracy measure of comparison because I find that postive vs negative error does not indciate much since over vs under forecasting is equally bad in this case. I find that mean absolute percent error is holistic as it creates a comparison to the original value. For example, saying you under forecasted by 20 units does not really tell me much on its own. However, if you come to learn that the absolute percent error for this forecast is 80%, suddenly this context highlights the stuggle in my model. 
+plot(Transit_ts)
+#Overall, the transit data shows a large amount of seasonality due to the cyclic patterns. This makes Holtwinters model the best, with the lowest mape of 4.02. In addition, this data also has trend following 2020, which the Holtwinters model is able to account for unlike the naive model. The projected value one year from now using the Holtwinters model is 550583. I think the use of trend after covid would suggest that this number will continue to increase over the next two years until it was fully recouped from covid. 
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
